@@ -17,7 +17,7 @@ contract NTDaoGene is Ownable {
         "uncommon", //1
         "rare",     //2
         "epic",     //3
-        "legendary"//4
+        "legendary" //4
     ];
 
     string[] private elements = [
@@ -25,7 +25,7 @@ contract NTDaoGene is Ownable {
         "wood",    //1
         "fire",    //2
         "earth",   //3
-        "metal"   //4
+        "metal"    //4
     ];
 
     string[] private branches = [
@@ -38,10 +38,18 @@ contract NTDaoGene is Ownable {
         "horse"    //6
         "goat",    //7
         "monkey",  //8
-        "rooster",  //9
-        "dog",      //10
+        "rooster", //9
+        "dog",     //10
         "pig"      //11        
     ];
+
+    string[] private divisions = [
+        "Geumgang",  //0
+        "Seorak",    //1
+        "Jiri",      //2
+        "Halla",     //3
+        "Baekdu"     //4
+    ];    
 
     modifier onlyNftOrOwner() {
         require(_msgSender() == _nftAddr || _msgSender() == owner(), "TankGene: caller is not the NFT tank contract address");
@@ -65,21 +73,23 @@ contract NTDaoGene is Ownable {
     }
 
     function getBaseGenes(uint _tokenId) public view onlyNftOrOwner returns (uint[] memory) {
-        uint[] memory genes = new uint[](3);
+        uint[] memory genes = new uint[](4);
         uint seed = getSeed(_tokenId);
         genes[0] = getClassIdx(seed);
         genes[1] = getElementIdx(seed);
         genes[2] = getBranchIdx(seed);
+        genes[3] = getDivisionIdx(seed);
         return genes;
     }
 
     function getBaseGeneNames(uint _tokenId) public view onlyNftOrOwner returns (string[] memory) {
 
         uint[] memory genes = getBaseGenes(_tokenId);
-        string[] memory geneNames = new string[](3);
+        string[] memory geneNames = new string[](4);
         geneNames[0] = classes[genes[0]];
         geneNames[1] = elements[genes[1]];
         geneNames[2] = branches[genes[2]];
+        geneNames[3] = divisions[genes[3]];
         return geneNames;
     }    
 
@@ -157,6 +167,21 @@ contract NTDaoGene is Ownable {
         }
     }
 
+    function getDivisionIdx(uint _seed) private pure returns (uint) {
+        uint v = (_seed/10000000) % 100;
+        if (v < 50) {
+            return uint(0);
+        } else if (v < 85) {
+            return uint(1);
+        } else if (v < 97) {
+            return uint(2);
+        } else if (v < 99) {
+            return uint(3);
+        } else {
+            return uint(4);
+        }
+    }
+
     function getDescription() external pure returns (string memory) {
         string memory desc = "The National Treasure DAO (NTDAO) is a project designed to protect the cultural heritage of Korea as a shared property of citizens and spread its meaning to the public. The name DAO (Decentralized Autonomous Organization) was given, because this project is not for the benefit of a particular company or individual, but to express the voluntary participation of many citizens and communities to achieve the goal of the organization through decentralized decision-making. The process of carrying out this project itself is also the goal of contemplating, sharing, and working together on the true meaning of cultural heritage protection.";
         return desc;
@@ -164,7 +189,7 @@ contract NTDaoGene is Ownable {
 
     function getAttrs(uint _tokenId) external view returns (string memory) {
         string[] memory genes  = getBaseGeneNames(_tokenId);
-        string[7] memory parts;
+        string[9] memory parts;
 
         parts[0] = '[{"trait_type": "class", "value": "';
         parts[1] = genes[0];
@@ -172,9 +197,11 @@ contract NTDaoGene is Ownable {
         parts[3] = genes[1];
         parts[4] = '"}, {"trait_type": "branch", "value": "';        
         parts[5] = genes[2];
-        parts[6] = '"}]';
+        parts[6] = '"}, {"trait_type": "division", "value": "';        
+        parts[7] = genes[3];
+        parts[8] = '"}]';
 
-        string memory attrs = string(abi.encodePacked(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6]));
+        string memory attrs = string(abi.encodePacked(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8]));
         return attrs;
     }
 
