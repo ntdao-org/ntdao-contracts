@@ -17,7 +17,7 @@ describe("NTDaoNft", function () {
     NTDaoNftContract = await ethers.getContractFactory("NTDaoNft");
     [owner, addr1, addr2, addr3] = await ethers.getSigners();
 
-    nft = await NTDaoNftContract.deploy("https://ipfs-gateway.atomrigs.io/ntdao/"); 
+    nft = await NTDaoNftContract.deploy(); 
     await nft.deployed();
     
   });
@@ -31,19 +31,6 @@ describe("NTDaoNft", function () {
     await expect(nft.connect(addr1).updateMintingFee(ethers.utils.parseEther("0.1")))
     .to.be.revertedWith("Ownable: caller is not the owner");
   });
-
-  it("updateBaseImgUrl() should NOT allow to update baseImgUrl unless the caller is the owner", async function () {
-    const baseImgUrl = "https://ipfs.io/ipfs/";
-    await expect(nft.connect(addr1).updateBaseImgUrl(baseImgUrl))
-      .to.be.revertedWith("Ownable: caller is not the owner");
-  });
-
-  it("updateBaseImgUrl() should NOT allow to update baseImgUrl once isPermanent is set", async function () {
-    await nft.changeToPermanent();
-    const baseImgUrl = "https://ipfs.io/ipfs/"
-    await expect(nft.updateBaseImgUrl(baseImgUrl))
-      .to.be.revertedWith("NTDAO-NFT: All images are on ipfs");
-  })
 
   it("changeToPermenent() should NOT allow to change the state unless the caller is the owner", 
     async function () {
