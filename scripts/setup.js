@@ -13,7 +13,6 @@ let owner;
 let addr1;
 let addr2;
 let addr3;
-let baseImgUrl = "https://ipfs-gateway.atomrigs.io/fortress-arena-nft/";
 
 (async () => {
     [owner, addr1, addr2, addr3] = await ethers.getSigners();
@@ -21,7 +20,7 @@ let baseImgUrl = "https://ipfs-gateway.atomrigs.io/fortress-arena-nft/";
     GeneContract = await ethers.getContractFactory("NTDaoGene");
     NFTContract = await ethers.getContractFactory("NTDaoNft");
 
-    nft = await NFTContract.deploy(baseImgUrl); 
+    nft = await NFTContract.deploy(); 
     await nft.deployed();
 
     gene = await GeneContract.deploy(nft.address); 
