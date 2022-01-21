@@ -199,7 +199,7 @@ contract NTDaoGene is Ownable {
         parts[5] = genes[2];
         parts[6] = '"}, {"trait_type": "division", "value": "';        
         parts[7] = genes[3];
-        parts[8] = '"}]';
+        parts[8] = '"}, {"trait_type": "generation", "value": "generation-0"}]';        
 
         string memory attrs = string(abi.encodePacked(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8]));
         return attrs;
