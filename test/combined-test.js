@@ -16,14 +16,13 @@ describe("Combined Contract Test", function () {
   let addr1;
   let addr2;
   let addr3;
-  let baseImgUrl = "https://ipfs-gateway.atomrigs.io/ntdao/";
 
   beforeEach(async function () {
 
     NTDaoNftContract = await ethers.getContractFactory("NTDaoNft");
-    GeneContract = await ethers.getContractFactory("NTDaoNft");
+    GeneContract = await ethers.getContractFactory("NTDaoGene");
 
-    nft = await NTDaoNftContract.deploy(baseImgUrl);
+    nft = await NTDaoNftContract.deploy();
     await nft.deployed();
 
     gene = await GeneContract.deploy(nft.address);

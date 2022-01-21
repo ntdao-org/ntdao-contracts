@@ -21,7 +21,7 @@ describe("NTDaoNft", function () {
     NTDaoNftContract = await ethers.getContractFactory("NTDaoNft");
     [owner, addr1, addr2, addr3] = await ethers.getSigners();
 
-    nft = await NTDaoNftContract.deploy("https://ipfs-gateway.atomrigs.io/ntdao/"); 
+    nft = await NTDaoNftContract.deploy(); 
     await nft.deployed();
     
   });
@@ -35,21 +35,6 @@ describe("NTDaoNft", function () {
     it("updateMintingFee() should NOT allow to update MINTING_FEE unless the caller is the owner", async function () {
       await expect(nft.connect(addr1).updateMintingFee(ethers.utils.parseEther("0.1")))
       .to.be.revertedWith("Ownable: caller is not the owner");
-    });  
-  });
-
-  describe("update base image url", async () => {
-    it("updateBaseImgUrl() should NOT allow to update baseImgUrl unless the caller is the owner", async function () {
-      const baseImgUrl = "https://ipfs.io/ipfs/";
-      await expect(nft.connect(addr1).updateBaseImgUrl(baseImgUrl))
-        .to.be.revertedWith("Ownable: caller is not the owner");
-    });
-  
-    it("updateBaseImgUrl() should NOT allow to update baseImgUrl once isPermanent is set", async function () {
-      await nft.changeToPermanent();
-      const baseImgUrl = "https://ipfs.io/ipfs/"
-      await expect(nft.updateBaseImgUrl(baseImgUrl))
-        .to.be.revertedWith("NTDAO-NFT: All images are on ipfs");
     });  
   });
 
@@ -115,14 +100,8 @@ describe("NTDaoNft", function () {
       nft.changeToPermanent();
       await expect(nft.updateGene(randomAddr)).to.be.revertedWith("NTDAO-NFT: Gene contract is fixed");
     });
-
-    it("updateBaseImgUrl() should NOT allow update gene after the state is permanent", async () => {
-      const randomUrl = "http://ipfs.atomrigs.io";
-      nft.changeToPermanent();
-      await expect(nft.updateBaseImgUrl(randomUrl)).to.be.revertedWith("NTDAO-NFT: All images are on ipfs");
-    });
-
   });
+
   describe("minting", async () => {
     
     beforeEach(async () => {

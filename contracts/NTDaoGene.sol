@@ -13,34 +13,34 @@ contract NTDaoGene is Ownable {
     address public _nftAddr;
 
     string[] private classes = [
-        "common",   //0
-        "uncommon", //1
-        "rare",     //2
-        "epic",     //3
-        "legendary" //4
+        "Common",           //0
+        "Rare",             //1
+        "Super Rare",       //2
+        "Treasure",         //3
+        "National Treasure" //4
     ];
 
     string[] private elements = [
-        "water",   //0
-        "wood",    //1
-        "fire",    //2
-        "earth",   //3
-        "metal"    //4
+        "Water",   //0
+        "Wood",    //1
+        "Fire",    //2
+        "Earth",   //3
+        "Metal"    //4
     ];
 
     string[] private branches = [
-        "rat",     //0
-        "ox",      //1
-        "tiger",   //2
-        "rabbit",  //3
-        "dragon",  //4        
-        "snake",   //5
-        "horse"    //6
-        "goat",    //7
-        "monkey",  //8
-        "rooster", //9
-        "dog",     //10
-        "pig"      //11        
+        "Rat",     //0
+        "Ox",      //1
+        "Tiger",   //2
+        "Rabbit",  //3
+        "Dragon",  //4        
+        "Snake",   //5
+        "Horse"    //6
+        "Goat",    //7
+        "Monkey",  //8
+        "Rooster", //9
+        "Dog",     //10
+        "Pig"      //11        
     ];
 
     string[] private divisions = [
@@ -205,6 +205,28 @@ contract NTDaoGene is Ownable {
         return attrs;
     }
 
+    function getImg(uint _tokenId) external view returns (string memory) {
+        string[] memory genes  = getBaseGeneNames(_tokenId);
+        string[12] memory parts;
+        parts[0] = '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 600 600">';
+        parts[1] = '<style> .base {font-family: fantasy; fill: #3D2818; font-size:150%; letter-spacing: 0em;}</style>';
+        parts[2] = '<image width="600" height="600" href="https://raw.githubusercontent.com/ntdao-org/ntdao-org.github.io/main/asset/NTD_NFT_bg_en.jpg"/>';
+        parts[3] = '<text x="20%" y="420" dominant-baseline="middle" text-anchor="middle" class="base">';
+        parts[4] = genes[0];
+        parts[5] = '</text><text x="60%" y="420" dominant-baseline="middle" text-anchor="middle" class="base">';
+        parts[6] = genes[1];
+        parts[7] = '</text><text x="40%" y="470" dominant-baseline="middle" text-anchor="middle" class="base">';
+        parts[8] = genes[2];
+        parts[9] = '</text><text x="80%" y="470" dominant-baseline="middle" text-anchor="middle" class="base">';        
+        parts[10] = genes[3];
+        parts[11] = '</text></svg>';
+        string memory attrs = string(abi.encodePacked(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8]));
+        attrs = string(abi.encodePacked(attrs, parts[9], parts[10], parts[11]));
+
+        string memory img = string(abi.encodePacked('data:image/svg+xml;base64,',Base64.encode(bytes(attrs))));
+        return img;
+    }
+
     function toString(uint256 value) internal pure returns (string memory) {
     // Inspired by OraclizeAPI's implementation - MIT license
     // https://github.com/oraclize/ethereum-api/blob/b42146b063c7d6ee1358846c198246239e9360e8/oraclizeAPI_0.4.25.sol
@@ -226,4 +248,66 @@ contract NTDaoGene is Ownable {
         }
         return string(buffer);
     }    
+}
+
+/// [MIT License]
+/// @title Base64
+/// @notice Provides a function for encoding some bytes in base64
+/// @author Brecht Devos <brecht@loopring.org>
+
+library Base64 {
+    bytes internal constant TABLE = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+    /// @notice Encodes some bytes to the base64 representation
+    function encode(bytes memory data) internal pure returns (string memory) {
+        uint256 len = data.length;
+        if (len == 0) return "";
+
+        // multiply by 4/3 rounded up
+        uint256 encodedLen = 4 * ((len + 2) / 3);
+
+        // Add some extra buffer at the end
+        bytes memory result = new bytes(encodedLen + 32);
+
+        bytes memory table = TABLE;
+
+        assembly {
+            let tablePtr := add(table, 1)
+            let resultPtr := add(result, 32)
+
+            for {
+                let i := 0
+            } lt(i, len) {
+
+            } {
+                i := add(i, 3)
+                let input := and(mload(add(data, i)), 0xffffff)
+
+                let out := mload(add(tablePtr, and(shr(18, input), 0x3F)))
+                out := shl(8, out)
+                out := add(out, and(mload(add(tablePtr, and(shr(12, input), 0x3F))), 0xFF))
+                out := shl(8, out)
+                out := add(out, and(mload(add(tablePtr, and(shr(6, input), 0x3F))), 0xFF))
+                out := shl(8, out)
+                out := add(out, and(mload(add(tablePtr, and(input, 0x3F))), 0xFF))
+                out := shl(224, out)
+
+                mstore(resultPtr, out)
+
+                resultPtr := add(resultPtr, 4)
+            }
+
+            switch mod(len, 3)
+            case 1 {
+                mstore(sub(resultPtr, 2), shl(240, 0x3d3d))
+            }
+            case 2 {
+                mstore(sub(resultPtr, 1), shl(248, 0x3d))
+            }
+
+            mstore(result, encodedLen)
+        }
+
+        return string(result);
+    }
 }
