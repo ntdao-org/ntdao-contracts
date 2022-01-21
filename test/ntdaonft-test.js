@@ -144,7 +144,7 @@ describe("NTDaoNft", function () {
     let tokenIds = await nft.tokensOf(addr1.address);
     await nft.setStateToRefund();
     await nft.connect(addr1).refund(tokenIds);
-    expect(await nft.refunds[tokenIds[0]]).to.be.equal(false);
+    expect(await nft.refunds(tokenIds[0])).to.be.equal(true);
   });
 
 

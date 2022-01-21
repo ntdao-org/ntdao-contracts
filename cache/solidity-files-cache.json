@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/Users/brian/Work/ntdao/ntdao-contracts/contracts/NTDaoGene.sol": {
-      "lastModificationDate": 1642759631343,
-      "contentHash": "03d50072b6df516697c30ae33b5302c3",
+      "lastModificationDate": 1642780571439,
+      "contentHash": "744c5181693c28dafb1266da74b78781",
       "sourceName": "contracts/NTDaoGene.sol",
       "solcConfig": {
         "version": "0.8.10",
@@ -111,8 +111,8 @@
       ]
     },
     "/Users/brian/Work/ntdao/ntdao-contracts/contracts/NTDaoNft.sol": {
-      "lastModificationDate": 1642761806628,
-      "contentHash": "397708c5acc89caf6a26b62017898729",
+      "lastModificationDate": 1642777799614,
+      "contentHash": "1ac1ec9c2496d1fd96d9c05625e05da6",
       "sourceName": "contracts/NTDaoNft.sol",
       "solcConfig": {
         "version": "0.8.10",
