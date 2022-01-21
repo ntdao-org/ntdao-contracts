@@ -20,6 +20,7 @@ interface INFTGene {
     function getImgIdx(uint _tokenId) external view returns (string memory);
     function getDescription() external view returns (string memory);
     function getAttrs(uint _tokenId) external view returns (string memory);
+    function getImg(uint _tokenId) external view returns (string memory);
 }
 
 contract NTDaoNft is ERC721Enumerable, ReentrancyGuard, Ownable {
@@ -35,13 +36,11 @@ contract NTDaoNft is ERC721Enumerable, ReentrancyGuard, Ownable {
 
     State public state;
     address private _geneAddr;
-    address private _receiver;
-
     bool public isPermanent;
     uint8 public constant MAX_PUBLIC_MULTI = 20;
     uint16 public constant MAX_PUBLIC_ID = 20000;
     uint public MINTING_FEE = 300 * 10**18; //in wei
-    string private _baseImgUrl = "";
+    uint public notRefundCount;
 
     mapping(uint => bool) public refunds; //token_id => bool
 
@@ -50,8 +49,7 @@ contract NTDaoNft is ERC721Enumerable, ReentrancyGuard, Ownable {
     event StateChanged(State _state);
     event Refunded(address indexed to, uint indexed tokenId, uint amount);
 
-    constructor(string memory baseImgUrl_) ERC721("National Treasure DAO NFT", "NTDAO-NFT") Ownable() {
-        _baseImgUrl = baseImgUrl_;
+    constructor() ERC721("National Treasure DAO NFT", "NTDAO-NFT") Ownable() {
         state = State.Setup;
     }
 
@@ -71,11 +69,6 @@ contract NTDaoNft is ERC721Enumerable, ReentrancyGuard, Ownable {
     function updateGene(address geneContract_) external onlyOwner {
         require(!isPermanent, "NTDAO-NFT: Gene contract is fixed");
         _geneAddr = geneContract_;
-    }
-
-    function updateBaseImgUrl(string memory _url) external onlyOwner {
-        require(!isPermanent, "NTDAO-NFT: All images are on ipfs");
-        _baseImgUrl = _url;
     }
 
     function changeToPermanent() external onlyOwner {
@@ -123,6 +116,7 @@ contract NTDaoNft is ERC721Enumerable, ReentrancyGuard, Ownable {
 
         for(uint i=0; i<_count; i++) {
             _tokenIds.increment();
+            notRefundCount += 1;
             require(safeMint(_msgSender(), _tokenIds.current()), "NTDAO-NFT: minting failed");
         }
     }
@@ -130,13 +124,15 @@ contract NTDaoNft is ERC721Enumerable, ReentrancyGuard, Ownable {
     function refund(uint[] calldata tokenIds_) external nonReentrant {
         require(state == State.Refund, "NTDAO-NFT: State is not in Refund");
         address _to = payable(_msgSender());
+        uint refundAmount = address(this).balance / notRefundCount;
         for(uint i=0; i<tokenIds_.length; i++) {
             require(refunds[tokenIds_[i]] == false, "NTDAO-NFT: The tokendId is already refunded");
             require(ownerOf(tokenIds_[i]) == _to, "NTDAO-NFT: The token owner is different");
             refunds[tokenIds_[i]] = true;
-            (bool success, ) = _to.call{value: MINTING_FEE}("");
+            notRefundCount -= 1;
+            (bool success, ) = _to.call{value: refundAmount}("");
             require(success, "NTDAO-NFT: Failed to send coin");
-            emit Refunded(_to, tokenIds_[i], MINTING_FEE);         
+            emit Refunded(_to, tokenIds_[i], refundAmount);         
         }
     }
 
@@ -164,18 +160,6 @@ contract NTDaoNft is ERC721Enumerable, ReentrancyGuard, Ownable {
         return gene.getBaseGeneNames(_tokenId);        
     }
 
-    function getImgUrl(uint _tokenId) public view returns (string memory) {
-        require(_exists(_tokenId), "NTDAO-NFT: TokenId not minted yet");
-
-        return string(abi.encodePacked(_baseImgUrl, toString(_tokenId), '.gif'));
-    }
-
-    function getImgIdx(uint _tokenId) public view returns (string memory) {
-        require(_exists(_tokenId), "NTDAO-NFT: TokenId not minted yet");
-        INFTGene gene = INFTGene(_geneAddr);
-        return gene.getImgIdx(_tokenId);
-    }
-
     function tokensOf(address _account) public view returns (uint[] memory) {
         uint[] memory tokenIds = new uint[] (balanceOf(_account));
         for (uint i; i<balanceOf(_account); i++) {
@@ -184,7 +168,7 @@ contract NTDaoNft is ERC721Enumerable, ReentrancyGuard, Ownable {
         return tokenIds;
     }
 
-    function getAttrs(uint _tokenId) internal view returns (string memory) {
+    function getAttrs(uint _tokenId) public view returns (string memory) {
         require(_exists(_tokenId), "NTDAO-NFT: TokenId not minted yet");
         INFTGene gene = INFTGene(_geneAddr);
         return gene.getAttrs(_tokenId);
@@ -194,13 +178,19 @@ contract NTDaoNft is ERC721Enumerable, ReentrancyGuard, Ownable {
         INFTGene gene = INFTGene(_geneAddr);
         return gene.getDescription();
     }
+
+    function getImg(uint _tokenId) public view returns (string memory) {
+        require(_exists(_tokenId), "NTDAO-NFT: TokenId not minted yet");
+        INFTGene gene = INFTGene(_geneAddr);
+        return gene.getImg(_tokenId);
+    }
    
     function tokenURI(uint _tokenId) override public view returns (string memory) {
         require(_exists(_tokenId), "NTDAO-NFT: TokenId not minted yet");
         string memory attrs = getAttrs(_tokenId);
-        string memory imgUrl = getImgUrl(_tokenId);
+        string memory img = getImg(_tokenId); 
         string memory description = getDescription();
-        string memory json = Base64.encode(bytes(string(abi.encodePacked('{"name": "National Treasure DAO NFT #', toString(_tokenId), '", "attributes": ', attrs,', "description": "', description, '", "image": "', imgUrl, '"}'))));
+        string memory json = Base64.encode(bytes(string(abi.encodePacked('{"name": "National Treasure DAO NFT #', toString(_tokenId), '", "attributes": ', attrs,', "description": "', description, '", "image": "', img, '"}'))));
         return string(abi.encodePacked('data:application/json;base64,', json));
     }
 
