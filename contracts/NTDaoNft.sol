@@ -40,7 +40,7 @@ contract NTDaoNft is ERC721Enumerable, ReentrancyGuard, Ownable {
     bool public isPermanent;
     uint8 public constant MAX_PUBLIC_MULTI = 20;
     uint16 public constant MAX_PUBLIC_ID = 20000;
-    uint public MINTING_FEE = 100 * 10**18; //in wei
+    uint public MINTING_FEE = 300 * 10**18; //in wei
     string private _baseImgUrl = "";
 
     mapping(uint => bool) public refunds; //token_id => bool
