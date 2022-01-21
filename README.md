@@ -1,3 +1,3 @@
 # ntdao-contracts
 
-Natioanl Treasure DAO contracts
+National Treasure DAO contracts
