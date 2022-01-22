@@ -284,6 +284,19 @@ contract NTDaoNft is ERC721Enumerable, ReentrancyGuard, Ownable {
         }
     }
 
+    function getUnclaimedRefunds(address _account) public view returns (uint256[] memory) {
+        uint256[] memory tokenIds = new uint256[](balanceOf(_account));
+        for (uint256 i; i < balanceOf(_account); i++) {
+            uint256 tokenId = tokenOfOwnerByIndex(_account, i);
+            if (refunds[tokenId]) {
+                tokenIds[i] = 0;
+            } else {
+                tokenIds[i] = tokenId;
+            }
+        }
+        return tokenIds;        
+    }
+
     function toString(uint256 value) internal pure returns (string memory) {
         // Inspired by OraclizeAPI's implementation - MIT license
         // https://github.com/oraclize/ethereum-api/blob/b42146b063c7d6ee1358846c198246239e9360e8/oraclizeAPI_0.4.25.sol
