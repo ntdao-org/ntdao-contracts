@@ -249,8 +249,8 @@ describe("NTDaoNft", function () {
       // refund
       await nft.setStateToRefund();
       await nft.connect(addr1).refund(tokenIds);
-      expect(await await nft.refundState(tokenIds[0])).to.be.equal(true);
-      expect(await await nft.refundState(tokenIds[1])).to.be.equal(true);
+      expect(await nft.refundState(tokenIds[0])).to.be.equal(true);
+      expect(await nft.refundState(tokenIds[1])).to.be.equal(true);
 
       // balance after refund
       const afterBalance = utils.formatEther(await addr1.getBalance());
@@ -258,6 +258,24 @@ describe("NTDaoNft", function () {
       // should received all the fund
       expect(parseFloat(afterBalance) - parseFloat(initBalance))
         .to.be.closeTo(parseFloat(utils.formatEther((await nft.MINTING_FEE()).mul(2))), 1e-3);
+    });
+
+    it("refund() should NOT refund after all funds are returned", async () => {
+      // refund
+      await nft.setStateToRefund();
+      await nft.connect(addr1).refund(tokenIds);
+      await expect(nft.connect(addr1).refund([tokenIds[0]])).
+        to.be.revertedWith("NTDAO-NFT: All funds are returned");
+    });
+
+    it("refund() should NOT refund twice", async function () {
+      // refund
+      await nft.setStateToRefund();
+      await nft.connect(addr1).refund([tokenIds[0]]);
+      expect(await nft.refundState(tokenIds[0])).to.be.equal(true);
+      expect(await nft.refundState(tokenIds[1])).to.be.equal(false);
+      await expect(nft.connect(addr1).refund([tokenIds[0]])).
+        to.be.rejectedWith("NTDAO-NFT: The tokendId is already refunded");
     });
   });
 
@@ -371,7 +389,6 @@ describe("NTDaoNft", function () {
       // remaining balance of the contract should be ZERO.
       expect(await nft.getBalance()).to.be.equal(0);
     });
-
   });
 });
 
