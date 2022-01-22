@@ -157,16 +157,21 @@ contract NTDaoNft is ERC721Enumerable, ReentrancyGuard, Ownable {
     function refund(uint256[] calldata tokenIds_) external nonReentrant {
         require(state == State.Refund, "NTDAO-NFT: State is not in Refund");
         address _to = payable(_msgSender());
+
+        require(notRefundCount > 0, "NTDAO-NFT: All funds are returned");
         uint256 refundAmount = address(this).balance / notRefundCount;
+
         for (uint256 i = 0; i < tokenIds_.length; i++) {
             require(
                 refunds[tokenIds_[i]] == false,
                 "NTDAO-NFT: The tokendId is already refunded"
             );
+
             require(
                 ownerOf(tokenIds_[i]) == _to,
                 "NTDAO-NFT: The token owner is different"
             );
+
             refunds[tokenIds_[i]] = true;
             notRefundCount -= 1;
             (bool success, ) = _to.call{value: refundAmount}("");
