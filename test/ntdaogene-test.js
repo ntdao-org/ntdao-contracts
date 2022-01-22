@@ -64,12 +64,5 @@ describe("NTDaoGene", function () {
 
   });  
 
-  it("getImgIdx() should work only with NftAddr or Owner address", async function () {
-
-    await expect(gene.connect(addr1).getImgIdx(1)).to.eventually.be.rejectedWith(Error);
-    expect(await gene.connect(nftAddr).getImgIdx(1)).to.be.an('string');
-    expect(await gene.connect(owner).getImgIdx(1000)).to.be.an('string');
-
-  });  
 });
 
