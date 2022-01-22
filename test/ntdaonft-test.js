@@ -260,6 +260,32 @@ describe("NTDaoNft", function () {
         .to.be.closeTo(parseFloat(utils.formatEther((await nft.MINTING_FEE()).mul(2))), 1e-3);
     });
 
+    it("refund() should refund individual token", async function () {
+      // init balance addr1 has
+      const initBalance = utils.formatEther(await addr1.getBalance());
+      
+      await nft.setStateToRefund();
+      expect(await nft.connect(addr1).refund([tokenIds[0]])).
+        to.emit(nft, "Refunded").withArgs(addr1.address, tokenIds[0], 
+          utils.parseEther("300"));
+      expect(await nft.refundState(tokenIds[0])).to.be.equal(true);
+      // should leave the other token intact
+      expect(await nft.refundState(tokenIds[1])).to.be.equal(false);
+
+      // balance after refund
+      const afterBalance = utils.formatEther(await addr1.getBalance());
+
+      // should received the fund for one token
+      expect(parseFloat(afterBalance) - parseFloat(initBalance))
+        .to.be.closeTo(parseFloat(utils.formatEther((await nft.MINTING_FEE()))), 1e-3);
+    });
+
+    it("refund() should NOT refund someone else's token", async () => {
+      await nft.setStateToRefund();
+      await expect(nft.connect(addr2).refund([tokenIds[0]])).
+        to.be.revertedWith("NTDAO-NFT: The token owner is different");
+    });
+
     it("refund() should NOT refund after all funds are returned", async () => {
       // refund
       await nft.setStateToRefund();
@@ -389,7 +415,20 @@ describe("NTDaoNft", function () {
       // remaining balance of the contract should be ZERO.
       expect(await nft.getBalance()).to.be.equal(0);
     });
+
   });
+
+  describe("refund non existing token", async () => {
+    it("refund() should NOT refund non-existing token", async () => {
+      let options = {value: (await nft.MINTING_FEE()).mul(2)};
+      await nft.setStateToPublicMint();
+      await nft.connect(addr1).publicMint(2, options);
+
+      await nft.setStateToRefund();
+      await expect(nft.connect(addr1).refund([3])).
+        to.be.revertedWith("ERC721: owner query for nonexistent token");
+    });
+  })
 });
 
 
