@@ -13,13 +13,11 @@ describe("NTDaoNft", function () {
   let NTDaoNftContract;
   let nft;
   let owner;
-  let addr1;
-  let addr2;
-  let addr3;
+  let addr1, addr2, addr3, addr4, addr5, addr6;
 
   beforeEach(async function () {
     NTDaoNftContract = await ethers.getContractFactory("NTDaoNft");
-    [owner, addr1, addr2, addr3] = await ethers.getSigners();
+    [owner, addr1, addr2, addr3, addr4, addr5, addr6] = await ethers.getSigners();
 
     nft = await NTDaoNftContract.deploy(); 
     await nft.deployed();
@@ -213,7 +211,7 @@ describe("NTDaoNft", function () {
     });
   });
 
-  describe("refund", () => {
+  describe("refund: no loss case", () => {
 
     let tokenIds;
 
@@ -232,7 +230,6 @@ describe("NTDaoNft", function () {
       await expect(nft.connect(addr1).refund(tokenIds)).
         to.be.revertedWith("NTDAO-NFT: State is not in Refund");
     });
-  
   
     it("refund() should not refund if the state is PublicMint", async () => {
       await expect(nft.connect(addr1).refund(tokenIds)).
@@ -262,7 +259,120 @@ describe("NTDaoNft", function () {
       expect(parseFloat(afterBalance) - parseFloat(initBalance))
         .to.be.closeTo(parseFloat(utils.formatEther((await nft.MINTING_FEE()).mul(2))), 1e-3);
     });
-  })
+  });
+
+  describe("refund: exchange loss", async () => {
+    let tokenIds;
+
+    beforeEach(async () => {
+      await nft.setStateToPublicMint();
+    });
+
+    it("refund() should refund 1/n in the case of exchange loss", async () => {
+      /* scenario: a portion or the entire fund will be withdrawn for the auction. 
+        If DAO loses the auction, it will re-deposit unused fund.
+        There should be some exchange loss mainly due to the price change of KLAY. 
+        In that case, each token will take the changes(loss/gain) proportionally */
+      
+      // addr1 mints 2 nfts
+      await nft.connect(addr1).publicMint(2, {value: (await nft.MINTING_FEE()).mul(2)});
+      expect(await nft.notRefundCount()).to.be.equal(2);
+
+      // addr2 mints 3 nfts
+      await nft.connect(addr2).publicMint(3, {value: (await nft.MINTING_FEE()).mul(3)});
+      expect(await nft.notRefundCount()).to.be.equal(5);
+
+      // addr3 mints 4 nfts
+      await nft.connect(addr3).publicMint(4, {value: (await nft.MINTING_FEE()).mul(4)});
+      expect(await nft.notRefundCount()).to.be.equal(9);
+
+      // addr4 mints 1 nfts
+      await nft.connect(addr4).publicMint(1, {value: (await nft.MINTING_FEE()).mul(1)});
+      expect(await nft.notRefundCount()).to.be.equal(10);
+
+      // addr5 mints 1 nfts
+      await nft.connect(addr5).publicMint(1, {value: (await nft.MINTING_FEE()).mul(1)});
+      expect(await nft.notRefundCount()).to.be.equal(11);
+
+      // total balance should be equal to total number of nfts * MINTING_FEE
+      expect(await nft.getBalance()).to.be.equal((await nft.MINTING_FEE()).mul(11));
+
+      // Withdraw about 30% of balance to participate the auction
+      await nft.withdraw(owner.address, utils.parseEther("900"));
+      expect(await nft.getBalance()).to.be.equal(utils.parseEther("2400"));
+
+      // 17% exchange loss due to price increase of KLAY
+      await owner.sendTransaction({to: nft.address, value: utils.parseEther("747")});
+      expect(await nft.getBalance()).to.be.equal(utils.parseEther("3147"));
+
+      // change the state to REFUND
+      await nft.setStateToRefund();
+
+      // addr1 refund
+      const addr1InitBalance = utils.formatEther(await addr1.getBalance());
+      const addr1Tokens = await nft.tokensOf(addr1.address);
+      expect(addr1Tokens.length).to.be.equal(2);
+      await nft.connect(addr1).refund(addr1Tokens);
+      const addr1AfterBalance = utils.formatEther(await addr1.getBalance());
+      // addr1 should received 2/11 of reduced balance
+      expect(parseFloat(addr1AfterBalance) - parseFloat(addr1InitBalance)).
+        to.be.closeTo(parseFloat("572.18"), 1e-2);
+      // notRefundCount should be decreased
+      expect(await nft.notRefundCount()).to.be.equal(9);
+
+      // addr2 refund
+      const addr2InitBalance = utils.formatEther(await addr2.getBalance());
+      const addr2Tokens = await nft.tokensOf(addr2.address);
+      expect(addr2Tokens.length).to.be.equal(3);
+      await nft.connect(addr2).refund(addr2Tokens);
+      const addr2AfterBalance = utils.formatEther(await addr2.getBalance());
+      // addr2 should received 3/11 of reduced balance
+      expect(parseFloat(addr2AfterBalance) - parseFloat(addr2InitBalance)).
+        to.be.closeTo(parseFloat("858.27"), 1e-2);
+      // notRefundCount should be decreased
+      expect(await nft.notRefundCount()).to.be.equal(6);
+
+      // addr3 refund
+      const addr3InitBalance = utils.formatEther(await addr3.getBalance());
+      const addr3Tokens = await nft.tokensOf(addr3.address);
+      expect(addr3Tokens.length).to.be.equal(4);
+      await nft.connect(addr3).refund(addr3Tokens);
+      const addr3AfterBalance = utils.formatEther(await addr3.getBalance());
+      // addr3 should received 4/11 of reduced balance
+      expect(parseFloat(addr3AfterBalance) - parseFloat(addr3InitBalance)).
+        to.be.closeTo(parseFloat("1144.36"), 1e-2);
+      // notRefundCount should be decreased
+      expect(await nft.notRefundCount()).to.be.equal(2);
+
+      // addr4 refund
+      const addr4InitBalance = utils.formatEther(await addr4.getBalance());
+      const addr4Tokens = await nft.tokensOf(addr4.address);
+      expect(addr4Tokens.length).to.be.equal(1);
+      await nft.connect(addr4).refund(addr4Tokens);
+      const addr4AfterBalance = utils.formatEther(await addr4.getBalance());
+      // addr4 should received 1/11 of reduced balance
+      expect(parseFloat(addr4AfterBalance) - parseFloat(addr4InitBalance)).
+        to.be.closeTo(parseFloat("286.09"), 1e-2);
+      // notRefundCount should be decreased
+      expect(await nft.notRefundCount()).to.be.equal(1);
+
+      // addr5 refund
+      const addr5InitBalance = utils.formatEther(await addr5.getBalance());
+      const addr5Tokens = await nft.tokensOf(addr5.address);
+      expect(addr5Tokens.length).to.be.equal(1);
+      await nft.connect(addr5).refund(addr5Tokens);
+      const addr5AfterBalance = utils.formatEther(await addr5.getBalance());
+      // addr5 should received 1/11 of reduced balance
+      expect(parseFloat(addr5AfterBalance) - parseFloat(addr5InitBalance)).
+        to.be.closeTo(parseFloat("286.09"), 1e-2);
+      // notRefundCount should be decreased
+      expect(await nft.notRefundCount()).to.be.equal(0);
+      
+      // remaining balance of the contract should be ZERO.
+      expect(await nft.getBalance()).to.be.equal(0);
+    });
+
+  });
 });
 
 
