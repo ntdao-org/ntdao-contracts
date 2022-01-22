@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
- * @title National Treasure DAO Gene Contract
+ * @title National Treasure DAO (NTDAO) Gene Contract
  * @author Atomrigs Lab 
  */
 
@@ -51,6 +51,17 @@ contract NTDaoGene is Ownable {
         "Baekdu"     //4
     ];    
 
+    string[] private countries = [
+        "Joseon",     //0
+        "Goryeo",     //1
+        "Balhae",     //2
+        "Silla",      //3
+        "Gaya",       //4        
+        "Baekje",     //5
+        "Goguryeo"    //6
+        "Gojoseon"    //7
+    ];
+
     modifier onlyNftOrOwner() {
         require(_msgSender() == _nftAddr || _msgSender() == owner(), "TankGene: caller is not the NFT tank contract address");
         _;
@@ -73,50 +84,37 @@ contract NTDaoGene is Ownable {
     }
 
     function getBaseGenes(uint _tokenId) public view onlyNftOrOwner returns (uint[] memory) {
-        uint[] memory genes = new uint[](4);
+        uint[] memory genes = new uint[](5);
         uint seed = getSeed(_tokenId);
         genes[0] = getClassIdx(seed);
         genes[1] = getElementIdx(seed);
         genes[2] = getBranchIdx(seed);
         genes[3] = getDivisionIdx(seed);
+        genes[4] = getCountryIdx(seed);
         return genes;
     }
 
     function getBaseGeneNames(uint _tokenId) public view onlyNftOrOwner returns (string[] memory) {
 
         uint[] memory genes = getBaseGenes(_tokenId);
-        string[] memory geneNames = new string[](4);
+        string[] memory geneNames = new string[](5);
         geneNames[0] = classes[genes[0]];
         geneNames[1] = elements[genes[1]];
         geneNames[2] = branches[genes[2]];
         geneNames[3] = divisions[genes[3]];
+        geneNames[4] = divisions[genes[4]];        
         return geneNames;
     }    
 
-    function getImgIdx(uint _tokenId) public view onlyNftOrOwner returns (string memory) {
-
-        uint[] memory genes = getBaseGenes(_tokenId);
-        string memory class = toString(genes[0] + uint(1));
-        string memory element = toString(genes[1] + uint(1));
-
-        string memory branch;
-        if(genes[1] <= 8) {
-            branch = string(abi.encodePacked("0", toString(genes[1] + uint(1))));
-        } else {
-            branch = toString(genes[1] + uint(1));
-        }
-        return string(abi.encodePacked(class, element, branch));
-    }
-
     function getClassIdx(uint _seed) private pure returns (uint) {
-        uint v = (_seed/10) % 100;
-        if (v < 50) {
+        uint v = (_seed/10) % 1000;
+        if (v < 450) {
             return uint(0);
-        } else if (v < 80) {
+        } else if (v < 800) {
             return uint(1);
-        } else if (v < 94) {
+        } else if (v < 970) {
             return uint(2);
-        } else if (v < 99) {
+        } else if (v < 998) {
             return uint(3);
         } else {
             return uint(4);
@@ -124,10 +122,10 @@ contract NTDaoGene is Ownable {
     }      
 
     function getElementIdx(uint _seed) private pure returns (uint) {
-        uint v = (_seed/1000) % 100;
-        if (v < 50) {
+        uint v = (_seed/10000) % 100;
+        if (v < 40) {
             return uint(0);
-        } else if (v < 75) {
+        } else if (v < 70) {
             return uint(1);
         } else if (v < 85) {
             return uint(2);
@@ -139,28 +137,28 @@ contract NTDaoGene is Ownable {
     }
 
     function getBranchIdx(uint _seed) private pure returns (uint) {
-        uint v = (_seed/100000) % 100;
-        if (v < 20) {
+        uint v = (_seed/1000000) % 100;
+        if (v < 18) {
             return uint(0);
-        } else if (v < 35) {
+        } else if (v < 31) {
             return uint(1);
-        } else if (v < 47) {
+        } else if (v < 43) {
             return uint(2);
-        } else if (v < 57) {
+        } else if (v < 53) {
             return uint(3);
-        } else if (v < 66) {
+        } else if (v < 62) {
             return uint(4);
-        } else if (v < 74) {
+        } else if (v < 70) {
             return uint(5);
-        } else if (v < 82) {
+        } else if (v < 78) {
             return uint(6);
-        } else if (v < 90) {
+        } else if (v < 86) {
             return uint(7);
-        } else if (v < 94) {
+        } else if (v < 91) {
             return uint(8);
-        } else if (v < 97) {
+        } else if (v < 95) {
             return uint(9);
-        } else if (v < 99) {
+        } else if (v < 98) {
             return uint(10);
         } else {
             return uint(11);
@@ -168,17 +166,38 @@ contract NTDaoGene is Ownable {
     }
 
     function getDivisionIdx(uint _seed) private pure returns (uint) {
-        uint v = (_seed/10000000) % 100;
-        if (v < 50) {
+        uint v = (_seed/100000000) % 100;
+        if (v < 40) {
             return uint(0);
-        } else if (v < 85) {
+        } else if (v < 70) {
             return uint(1);
-        } else if (v < 97) {
+        } else if (v < 90) {
             return uint(2);
         } else if (v < 99) {
             return uint(3);
         } else {
             return uint(4);
+        }
+    }
+
+    function getCountryIdx(uint _seed) private pure returns (uint) {
+        uint v = (_seed/10000000000) % 100;
+        if (v < 50) {
+            return uint(0);
+        } else if (v < 75) {
+            return uint(1);
+        } else if (v < 83) {
+            return uint(2);
+        } else if (v < 91) {
+            return uint(3);
+        } else if (v < 94) {
+            return uint(4);
+        } else if (v < 97) {
+            return uint(5);
+        } else if (v < 99) {
+            return uint(6);
+        } else {
+            return uint(7);
         }
     }
 
@@ -189,7 +208,7 @@ contract NTDaoGene is Ownable {
 
     function getAttrs(uint _tokenId) external view returns (string memory) {
         string[] memory genes  = getBaseGeneNames(_tokenId);
-        string[9] memory parts;
+        string[11] memory parts;
 
         parts[0] = '[{"trait_type": "class", "value": "';
         parts[1] = genes[0];
@@ -199,29 +218,39 @@ contract NTDaoGene is Ownable {
         parts[5] = genes[2];
         parts[6] = '"}, {"trait_type": "division", "value": "';        
         parts[7] = genes[3];
-        parts[8] = '"}, {"trait_type": "generation", "value": "generation-0"}]';        
+        parts[8] = '"}, {"trait_type": "country", "value": "';        
+        parts[9] = genes[4];
+        parts[10] = '"}, {"trait_type": "generation", "value": "generation-0"}]';        
 
         string memory attrs = string(abi.encodePacked(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8]));
+        attrs = string(abi.encodePacked(attrs, parts[9], parts[10]));
         return attrs;
     }
 
+    function getLogo() internal pure returns (string memory) {
+        string memory g = '';
+        return g;
+    }
+    
     function getImg(uint _tokenId) external view returns (string memory) {
         string[] memory genes  = getBaseGeneNames(_tokenId);
-        string[12] memory parts;
-        parts[0] = '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 600 600">';
-        parts[1] = '<style> .base {font-family: fantasy; fill: #3D2818; font-size:150%; letter-spacing: 0em;}</style>';
-        parts[2] = '<image width="600" height="600" href="https://raw.githubusercontent.com/ntdao-org/ntdao-org.github.io/main/asset/NTD_NFT_bg_en.jpg"/>';
-        parts[3] = '<text x="20%" y="420" dominant-baseline="middle" text-anchor="middle" class="base">';
+        string[14] memory parts;
+        parts[0] = '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 600 600" style="background-color: #f8f3ef;"><style> .base {font-family: cursive, fantasy; fill: #3D2818; font-size:200%; letter-spacing: 0em;}</style>';
+        parts[1] = getLogo();
+        parts[2] = '<text x="50%" y="220" dominant-baseline="middle" text-anchor="middle" class="base" style="fill: #3D2818; font-size:350%;"> &#xAD6D;&#xBCF4;  DAO</text>';
+        parts[3] = '<text x="50%" y="300" dominant-baseline="middle" text-anchor="middle" class="base">';
         parts[4] = genes[0];
-        parts[5] = '</text><text x="60%" y="420" dominant-baseline="middle" text-anchor="middle" class="base">';
+        parts[5] = '</text><text x="50%" y="350" dominant-baseline="middle" text-anchor="middle" class="base">';
         parts[6] = genes[1];
-        parts[7] = '</text><text x="40%" y="470" dominant-baseline="middle" text-anchor="middle" class="base">';
+        parts[7] = '</text><text x="50%" y="400" dominant-baseline="middle" text-anchor="middle" class="base">';
         parts[8] = genes[2];
-        parts[9] = '</text><text x="80%" y="470" dominant-baseline="middle" text-anchor="middle" class="base">';        
+        parts[9] = '</text><text x="50%" y="450" dominant-baseline="middle" text-anchor="middle" class="base">';        
         parts[10] = genes[3];
-        parts[11] = '</text></svg>';
+        parts[11] = '</text><text x="50%" y="500" dominant-baseline="middle" text-anchor="middle" class="base">';        
+        parts[12] = genes[4];
+        parts[13] = '</text></svg>';
         string memory attrs = string(abi.encodePacked(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8]));
-        attrs = string(abi.encodePacked(attrs, parts[9], parts[10], parts[11]));
+        attrs = string(abi.encodePacked(attrs, parts[9], parts[10], parts[11], parts[12], parts[13]));
 
         string memory img = string(abi.encodePacked('data:image/svg+xml;base64,',Base64.encode(bytes(attrs))));
         return img;
