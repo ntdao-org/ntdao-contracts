@@ -7,6 +7,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
+import "hardhat/console.sol";
+
 /**
  * @title Natioanl Treasure DAO(NTDAO) NFT Contract
  * @author Atomrigs Lab
@@ -160,15 +162,18 @@ contract NTDaoNft is ERC721Enumerable, ReentrancyGuard, Ownable {
 
         require(notRefundCount > 0, "NTDAO-NFT: All funds are returned");
         uint256 refundAmount = address(this).balance / notRefundCount;
+
         for (uint256 i = 0; i < tokenIds_.length; i++) {
             require(
                 refunds[tokenIds_[i]] == false,
                 "NTDAO-NFT: The tokendId is already refunded"
             );
+
             require(
                 ownerOf(tokenIds_[i]) == _to,
                 "NTDAO-NFT: The token owner is different"
             );
+
             refunds[tokenIds_[i]] = true;
             notRefundCount -= 1;
             (bool success, ) = _to.call{value: refundAmount}("");
