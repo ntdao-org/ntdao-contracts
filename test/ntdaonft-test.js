@@ -428,7 +428,28 @@ describe("NTDaoNft", function () {
       await expect(nft.connect(addr1).refund([3])).
         to.be.revertedWith("ERC721: owner query for nonexistent token");
     });
-  })
+
+  });
+
+  describe("unclaimed token", () => {
+    it("refund() should NOT return the token once the token is refunded", async () => {
+      let options = {value: (await nft.MINTING_FEE()).mul(5)};
+      await nft.setStateToPublicMint();
+      await nft.connect(addr2).publicMint(5, options);
+
+      await nft.setStateToRefund();
+      await nft.connect(addr2).refund([1,3]);
+
+      const unclaimedTokens = await nft.getUnclaimedRefunds(addr2.address);
+      expect(unclaimedTokens.length).to.be.equal(5);
+      expect(unclaimedTokens[0]).to.be.equal(0);
+      expect(unclaimedTokens[1]).to.be.equal(2);
+      expect(unclaimedTokens[2]).to.be.equal(0);
+      expect(unclaimedTokens[3]).to.be.equal(4);
+      expect(unclaimedTokens[4]).to.be.equal(5);
+    });
+  });
+
 });
 
 
