@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 /**
  * @title Natioanl Treasure DAO(NTDAO) NFT Contract
  * @author Atomrigs Lab
- */
+ **/
 
 interface INFTGene {
     function getSeed(uint256 _tokenId) external view returns (uint256);
