@@ -35,7 +35,7 @@ contract NTDaoGene is Ownable {
         "Rabbit",  //3
         "Dragon",  //4        
         "Snake",   //5
-        "Horse"    //6
+        "Horse",    //6
         "Goat",    //7
         "Monkey",  //8
         "Rooster", //9
@@ -58,7 +58,7 @@ contract NTDaoGene is Ownable {
         "Silla",      //3
         "Gaya",       //4        
         "Baekje",     //5
-        "Goguryeo"    //6
+        "Goguryeo",    //6
         "Gojoseon"    //7
     ];
 
