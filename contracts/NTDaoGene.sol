@@ -58,7 +58,7 @@ contract NTDaoGene is Ownable {
         "Silla",      //3
         "Gaya",       //4        
         "Baekje",     //5
-        "Goguryeo"    //6
+        "Goguryeo",    //6
         "Gojoseon"    //7
     ];
 
