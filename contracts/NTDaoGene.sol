@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract NTDaoGene is Ownable {
 
-    address public _nftAddr;
+    address private _nftAddr;
 
     string[] private classes = [
         "Common",           //0
