@@ -66,12 +66,8 @@ describe("NTDaoGene", function () {
     });
   
     it("getBaseGeneNames() should return gene names", async () => {
-      // 1
       let geneNames = await gene.getBaseGeneNames(1);
   
-      expect(classes).that.includes(geneNames[0]);
-      expect(elements).that.includes(geneNames[1]);
-      expect(branches).that.includes(geneNames[2]);
       expect(divisions).that.includes(geneNames[3]);
       expect(countries).that.includes(geneNames[4]);
 
