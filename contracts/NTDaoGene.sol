@@ -8,9 +8,14 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * @author Atomrigs Lab 
  */
 
+interface INFT {
+    function refundState(uint256 tokenId_) external view returns (bool);
+}
+
+
 contract NTDaoGene is Ownable {
 
-    address private _nftAddr;
+    address public _nftAddr;
 
     string[] private classes = [
         "Common",           //0
@@ -207,8 +212,17 @@ contract NTDaoGene is Ownable {
     }
 
     function getAttrs(uint _tokenId) external view returns (string memory) {
+
+        INFT nft = INFT(_nftAddr);
+        string memory isRefunded;
+        if(nft.refundState(_tokenId)) {
+            isRefunded = 'Y';
+        } else {
+            isRefunded = 'N';
+        }
+
         string[] memory genes  = getBaseGeneNames(_tokenId);
-        string[11] memory parts;
+        string[13] memory parts;
 
         parts[0] = '[{"trait_type": "class", "value": "';
         parts[1] = genes[0];
@@ -220,10 +234,12 @@ contract NTDaoGene is Ownable {
         parts[7] = genes[3];
         parts[8] = '"}, {"trait_type": "country", "value": "';        
         parts[9] = genes[4];
-        parts[10] = '"}, {"trait_type": "generation", "value": "generation-0"}]';        
+        parts[10] = '"}, {"trait_type": "isRefunded", "value": "';  
+        parts[11] = isRefunded;      
+        parts[12] = '"}, {"trait_type": "generation", "value": "Generation-0"}]';        
 
         string memory attrs = string(abi.encodePacked(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8]));
-        attrs = string(abi.encodePacked(attrs, parts[9], parts[10]));
+        attrs = string(abi.encodePacked(attrs, parts[9], parts[10], parts[11], parts[12]));
         return attrs;
     }
 
